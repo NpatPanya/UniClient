@@ -22,6 +22,7 @@ public final class RequestSpec {
     private final AuthConfig auth;
     private final SslConfig ssl;
     private final String httpMethod;
+    private final SoapRequestConfig soap;
 
     private RequestSpec(Builder b) {
         this.target = b.target;
@@ -31,6 +32,7 @@ public final class RequestSpec {
         this.auth = b.auth != null ? b.auth : AuthConfig.none();
         this.ssl = b.ssl != null ? b.ssl : SslConfig.platformDefault();
         this.httpMethod = b.httpMethod != null ? b.httpMethod : "POST";
+        this.soap = b.soap;
     }
 
     /**
@@ -48,6 +50,23 @@ public final class RequestSpec {
     public AuthConfig auth() { return auth; }
     public SslConfig ssl() { return ssl; }
     public String httpMethod() { return httpMethod; }
+    public SoapRequestConfig soap() { return soap; }
+
+    /** Returns a copy with only the wire body replaced. */
+    public RequestSpec withBody(Object replacementBody) {
+        Builder copy = builder()
+            .to(target)
+            .body(replacementBody)
+            .headers(headers.all())
+            .timeout(timeout)
+            .auth(auth)
+            .ssl(ssl)
+            .httpMethod(httpMethod);
+        if (soap != null) {
+            copy.soap(soap);
+        }
+        return copy.build();
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -60,12 +79,13 @@ public final class RequestSpec {
             && Objects.equals(timeout, that.timeout)
             && Objects.equals(auth, that.auth)
             && Objects.equals(ssl, that.ssl)
-            && Objects.equals(httpMethod, that.httpMethod);
+            && Objects.equals(httpMethod, that.httpMethod)
+            && Objects.equals(soap, that.soap);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(target, body, headers, timeout, auth, ssl, httpMethod);
+        return Objects.hash(target, body, headers, timeout, auth, ssl, httpMethod, soap);
     }
 
     @Override
@@ -87,6 +107,7 @@ public final class RequestSpec {
         private AuthConfig auth;
         private SslConfig ssl;
         private String httpMethod = "POST";
+        private SoapRequestConfig soap;
 
         public Builder to(String uri) {
             this.target = URI.create(Objects.requireNonNull(uri, "uri"));
@@ -136,6 +157,11 @@ public final class RequestSpec {
 
         public Builder httpMethod(String method) {
             this.httpMethod = Objects.requireNonNull(method, "httpMethod");
+            return this;
+        }
+
+        public Builder soap(SoapRequestConfig soap) {
+            this.soap = Objects.requireNonNull(soap, "soap");
             return this;
         }
 

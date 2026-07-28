@@ -45,27 +45,24 @@ For this checkout, `mvn test` verifies the dependency-free profile. Run
 
 ## Configuration
 
-`RequestSpec` is the immutable request value. The registry requires one factory for each
-`ServiceClient` value and applies the standard retry decorator when resolving a client:
+`RequestSpec` is the immutable request value. `StandardClientFactory` assembles the registry,
+retry decorator, and automatic request encoder:
 
 ```java
 DependencyAvailabilityPort availability = new ClasspathDependencyAvailability();
-AdapterRegistry registry = new AdapterRegistry(
-    availability,
-    StandardAdapterFactories.create());
-ClientFacade client = new ClientFacade(registry);
+ClientFacade client = StandardClientFactory.create(availability);
 ```
 
-`StandardAdapterFactories` includes CXF, so use it with the optional-adapters profile or with
-CXF explicitly available. A consumer that only needs JDK transports can register those two
-factories directly and provide a never-used placeholder for `APACHE_CXF`.
+The standard factory automatically selects the dependency-free JSON codec when Jackson is absent.
+If Jackson is available, it is used for richer JSON bodies. CXF is checked only when
+`ServiceClient.APACHE_CXF` is selected; add CXF explicitly when SOAP transport is needed.
 
 ## Usage Examples
 
 ### 1. Standard REST JSON Request
 
-The built-in codec has no third-party runtime dependency. Transport adapters accept serialized
-`byte[]` or `String` bodies, so serialization is an explicit composition step:
+The standard facade automatically serializes a public POJO as JSON. No explicit codec call is
+required:
 
 ```java
 public final class Order {
@@ -79,31 +76,28 @@ public final class Order {
     }
 }
 
-PayloadCodecPort json = new BuiltinJsonCodec();
-byte[] body = json.serialize(new Order("A-17"));
 RequestSpec request = RequestSpec.builder()
     .to("https://api.example.test/orders")
     .httpMethod("POST")
     .header("Content-Type", "application/json")
-    .body(body)
+    .body(new Order("A-17"))
     .build();
 
 ClientResponse response = client.execute(request, ServiceClient.REST_CLIENT);
 ```
 
-### 2. SOAP Request with Envelope Construction
+### 2. SOAP Request with Automatic Envelope Construction
 
-Add CXF explicitly before selecting `APACHE_CXF`. The fallback SOAP codec creates a SOAP 1.1
-envelope from explicit operation metadata:
+Add CXF explicitly before selecting `APACHE_CXF`. The facade automatically uses the SOAP codec,
+but the operation metadata must be supplied because it cannot be inferred safely:
 
 ```java
-PayloadCodecPort soap = new SoapEnvelopeCodec(new SoapEnvelopeMetadata(
-    "urn:orders", "CreateOrder", "urn:orders:CreateOrder"));
-byte[] envelope = soap.serialize(new Order("A-17"));
 RequestSpec request = RequestSpec.builder()
     .to("https://soap.example.test/orders")
     .header("Content-Type", "text/xml; charset=utf-8")
-    .body(envelope)
+    .soap(new SoapRequestConfig(
+        "urn:orders", "CreateOrder", "urn:orders:CreateOrder"))
+    .body(new Order("A-17"))
     .build();
 
 ClientResponse response = client.execute(request, ServiceClient.APACHE_CXF);
@@ -206,10 +200,11 @@ mvn -Poptional-adapters clean test
 Executable assertion suites are also available under `src/test/java`. The Plan 6 core suite
 uses hand-written fakes and performs no network, CXF, or Jackson work.
 
-## Known API Gaps
+## Automatic Encoding Contract
 
-The current redesign keeps serialization as a separate `PayloadCodecPort`; `ClientFacade` does
-not automatically select a codec from `ServiceClient`. Likewise, SOAP envelope construction is
-explicit through `SoapEnvelopeCodec` before transport execution. These are documented gaps from
-the earlier aspirational README wording and were not silently changed in the verification-only
-Plan 6.
+The standard `ClientFacade` now encodes non-wire POJO bodies automatically:
+
+- REST and HttpURLConnection requests use the built-in JSON codec, or Jackson when available.
+- CXF requests use `SoapRequestConfig` plus `SoapEnvelopeCodec` to create a complete SOAP 1.1
+  envelope before `Dispatch<SOAPMessage>` sends it.
+- Existing `byte[]` and `String` bodies are treated as already-serialized wire bodies.

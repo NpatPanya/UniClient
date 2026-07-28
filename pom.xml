@@ -26,14 +26,11 @@
                     <excludes>
                         <exclude>com/npat/uniclient/adapter/soap/**</exclude>
                         <exclude>com/npat/uniclient/adapter/codec/JacksonJsonCodec.java</exclude>
-                        <exclude>com/npat/uniclient/adapter/codec/PayloadCodecResolver.java</exclude>
-                        <exclude>com/npat/uniclient/adapter/StandardAdapterFactories.java</exclude>
                     </excludes>
                     <testExcludes>
                         <testExclude>com/npat/uniclient/adapter/ApacheCxfAdapterPlan3Test.java</testExclude>
                         <testExclude>com/npat/uniclient/adapter/TransportAdaptersPlan3Test.java</testExclude>
                         <testExclude>com/npat/uniclient/codec/SerializationAdaptersPlan4Test.java</testExclude>
-                        <testExclude>com/npat/uniclient/plan6/ReadmeExamplesPlan6Test.java</testExclude>
                     </testExcludes>
                 </configuration>
             </plugin>

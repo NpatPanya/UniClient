@@ -24,11 +24,11 @@
 - Modify: `src/main/java/com/npat/uniclient/core/model/RequestSpec.java`
 - Test: `src/test/java/com/npat/uniclient/facade/ApplicationLayerPlan2Test.java`
 
-- [ ] Add immutable validated `SoapRequestConfig` with `namespaceUri()`, `operationName()`, and `action()` accessors.
-- [ ] Add nullable SOAP configuration storage and `Builder.soap(SoapRequestConfig)` to `RequestSpec`.
-- [ ] Add `RequestSpec.withBody(Object)` preserving every existing field.
-- [ ] Add assertions for SOAP metadata retention and body replacement.
-- [ ] Run the focused test and confirm it fails before implementation because the new API is absent.
+- [x] Add immutable validated `SoapRequestConfig` with `namespaceUri()`, `operationName()`, and `action()` accessors.
+- [x] Add nullable SOAP configuration storage and `Builder.soap(SoapRequestConfig)` to `RequestSpec`.
+- [x] Add `RequestSpec.withBody(Object)` preserving every existing field.
+- [x] Add assertions for SOAP metadata retention and body replacement.
+- [x] Run the focused test and confirm it fails before implementation because the new API is absent.
 
 ### Task 2: Add the Encoding Port and Adapter
 
@@ -37,13 +37,13 @@
 - Create: `src/main/java/com/npat/uniclient/adapter/codec/DefaultRequestEncoder.java`
 - Test: `src/test/java/com/npat/uniclient/codec/SerializationAdaptersPlan4Test.java`
 
-- [ ] Define `byte[] encode(ServiceClient engine, RequestSpec request)` on the core port.
-- [ ] Implement raw `byte[]`/`String` pass-through.
-- [ ] Use `PayloadCodecResolver.resolveJson()` for REST and HttpURLConnection POJOs.
-- [ ] Build `SoapEnvelopeMetadata` from `SoapRequestConfig` and use `SoapEnvelopeCodec` for CXF POJOs.
-- [ ] Throw a clear `UniClientException` when a CXF POJO has no SOAP metadata.
-- [ ] Add failing assertions for JSON output, SOAP envelope structure, pass-through bodies, and missing metadata.
-- [ ] Implement the adapter and rerun the focused executable test until green.
+- [x] Define `byte[] encode(ServiceClient engine, RequestSpec request)` on the core port.
+- [x] Implement raw `byte[]`/`String` pass-through.
+- [x] Use `PayloadCodecResolver.resolveJson()` for REST and HttpURLConnection POJOs.
+- [x] Build `SoapEnvelopeMetadata` from `SoapRequestConfig` and use `SoapEnvelopeCodec` for CXF POJOs.
+- [x] Throw a clear `UniClientException` when a CXF POJO has no SOAP metadata.
+- [x] Add failing assertions for JSON output, SOAP envelope structure, pass-through bodies, and missing metadata.
+- [x] Implement the adapter and rerun the focused executable test until green.
 
 ### Task 3: Integrate Encoding into the Facade
 
@@ -52,11 +52,11 @@
 - Modify: `src/test/java/com/npat/uniclient/facade/ApplicationLayerPlan2Test.java`
 - Create: `src/test/java/com/npat/uniclient/plan7/AutomaticEncodingPlan7Test.java`
 
-- [ ] Add `ClientFacade(AdapterResolver, RequestEncoderPort)` while preserving the existing constructor.
-- [ ] Encode first, create `spec.withBody(encodedBytes)`, then resolve and execute the transport.
-- [ ] Add a fake encoder and fake transport assertion proving the transport receives bytes and retains request configuration.
-- [ ] Add an end-to-end fake test proving a POJO REST body is encoded without network I/O.
-- [ ] Run default-profile tests and direct assertions.
+- [x] Add `ClientFacade(AdapterResolver, RequestEncoderPort)` while preserving the existing constructor.
+- [x] Encode first, create `spec.withBody(encodedBytes)`, then resolve and execute the transport.
+- [x] Add a fake encoder and fake transport assertion proving the transport receives bytes and retains request configuration.
+- [x] Add an end-to-end fake test proving a POJO REST body is encoded without network I/O.
+- [x] Run default-profile tests and direct assertions.
 
 ### Task 4: Add Standard Automatic Composition and Documentation
 
@@ -66,15 +66,15 @@
 - Modify: `docs/plans/plan-6-verification-docs/sub-6.3-readme-examples.md`
 - Test: `src/test/java/com/npat/uniclient/plan6/ReadmeExamplesPlan6Test.java`
 
-- [ ] Add a standard factory that assembles `AdapterRegistry`, `DefaultRequestEncoder`, and `ClientFacade`.
-- [ ] Update examples to pass POJOs for REST and CXF and provide SOAP metadata explicitly.
-- [ ] Remove the documented automatic-encoding gap once verified.
-- [ ] Add a README compile-check using the standard factory.
+- [x] Add a standard factory that assembles `AdapterRegistry`, `DefaultRequestEncoder`, and `ClientFacade`.
+- [x] Update examples to pass POJOs for REST and CXF and provide SOAP metadata explicitly.
+- [x] Remove the documented automatic-encoding gap once verified.
+- [x] Add a README compile-check using the standard factory.
 
 ### Task 5: Verify and Commit
 
-- [ ] Run `mvn clean test` without optional dependencies.
-- [ ] Run `mvn -Poptional-adapters clean test` with CXF/Jackson.
-- [ ] Run all executable Plan 2–7 assertion classes directly.
-- [ ] Run `git diff --check` and inspect the final status.
-- [ ] Commit the implementation as `feat: automatically encode facade request bodies`.
+- [x] Run `mvn clean test` without optional dependencies.
+- [x] Run `mvn -Poptional-adapters clean test` with CXF/Jackson.
+- [x] Run all executable Plan 2–7 assertion classes directly.
+- [x] Run `git diff --check` and inspect the final status.
+- [x] Commit the implementation as `feat: automatically encode facade request bodies`.

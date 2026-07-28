@@ -1,10 +1,7 @@
 package com.npat.uniclient.plan6;
 
 import com.npat.uniclient.ServiceClient;
-import com.npat.uniclient.adapter.StandardAdapterFactories;
-import com.npat.uniclient.adapter.codec.BuiltinJsonCodec;
-import com.npat.uniclient.adapter.codec.SoapEnvelopeCodec;
-import com.npat.uniclient.adapter.codec.SoapEnvelopeMetadata;
+import com.npat.uniclient.adapter.StandardClientFactory;
 import com.npat.uniclient.adapter.crosscutting.MetadataHeaderFactory;
 import com.npat.uniclient.adapter.crosscutting.RequestHeaderAssembler;
 import com.npat.uniclient.adapter.http.HttpURLConnectionAdapter;
@@ -13,8 +10,7 @@ import com.npat.uniclient.core.model.AuthConfig;
 import com.npat.uniclient.core.model.ClientResponse;
 import com.npat.uniclient.core.model.RequestSpec;
 import com.npat.uniclient.core.model.SslConfig;
-import com.npat.uniclient.core.port.DependencyAvailabilityPort;
-import com.npat.uniclient.core.port.PayloadCodecPort;
+
 import com.npat.uniclient.core.port.TransportPort;
 import com.npat.uniclient.core.support.ClasspathDependencyAvailability;
 import com.npat.uniclient.facade.AdapterRegistry;
@@ -40,24 +36,21 @@ public final class ReadmeExamplesPlan6Test {
     }
 
     private static RequestSpec standardRestJsonRequest() {
-        PayloadCodecPort json = new BuiltinJsonCodec();
-        byte[] body = json.serialize(new Order("A-17"));
         return RequestSpec.builder()
             .to("https://api.example.test/orders")
             .httpMethod("POST")
             .header("Content-Type", "application/json")
-            .body(body)
+            .body(new Order("A-17"))
             .build();
     }
 
     private static RequestSpec soapRequest() {
-        PayloadCodecPort soap = new SoapEnvelopeCodec(new SoapEnvelopeMetadata(
-            "urn:orders", "CreateOrder", "urn:orders:CreateOrder"));
-        byte[] envelope = soap.serialize(new Order("A-17"));
         return RequestSpec.builder()
             .to("https://soap.example.test/orders")
             .header("Content-Type", "text/xml; charset=utf-8")
-            .body(envelope)
+            .soap(new com.npat.uniclient.core.model.SoapRequestConfig(
+                "urn:orders", "CreateOrder", "urn:orders:CreateOrder"))
+            .body(new Order("A-17"))
             .build();
     }
 
@@ -82,10 +75,7 @@ public final class ReadmeExamplesPlan6Test {
     }
 
     private static ClientFacade standardClient() {
-        DependencyAvailabilityPort availability = new ClasspathDependencyAvailability();
-        AdapterRegistry registry = new AdapterRegistry(
-            availability, StandardAdapterFactories.create());
-        return new ClientFacade(registry);
+        return StandardClientFactory.create(new ClasspathDependencyAvailability());
     }
 
     private static void extensibleRegistry() {

@@ -42,8 +42,7 @@ Completed `README.md`, closing out Plan 6 and the whole Project #1 sequence.
 **PASS (2026-07-29):** `README.md` now documents the final public API, dependency profiles,
 four copy-oriented examples, extensibility, error vocabulary, and verification commands.
 
-**Flagged gaps from earlier plans:** the current `ClientFacade` does not compose a
-`PayloadCodecPort`, so callers serialize POJO bodies explicitly before transport execution.
-`ApacheCxfAdapter` consumes an already serialized SOAP envelope; it does not auto-create one.
-The README documents the working API and calls out both gaps rather than silently adding new
-production behavior to this verification-only plan.
+**Resolved in follow-up fix (2026-07-29):** the standard facade now accepts an injected
+`RequestEncoderPort`, and `StandardClientFactory` wires automatic JSON and SOAP encoding.
+`SoapRequestConfig` makes the SOAP namespace, operation, and action explicit; CXF receives the
+complete envelope generated before transport execution.
