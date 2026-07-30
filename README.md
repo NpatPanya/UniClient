@@ -1,215 +1,203 @@
 # UniClient
 
-UniClient provides one application-facing facade for swappable HTTP and SOAP transports. The
-core depends on small ports (`TransportPort`, `PayloadCodecPort`, and
-`DependencyAvailabilityPort`); concrete adapters are supplied at the composition boundary.
+UniClient is a synchronous outbound-client library for gateway applications. The caller chooses a protocol-specific builder, configures that protocol completely, and calls one method:
 
-## Features
+```java
+response = uniClient.send(request);
+```
 
-- JDK-only HTTP transports: `HttpURLConnectionAdapter` and `RestClientAdapter`.
-- Optional Apache CXF transport: `ApacheCxfAdapter`.
-- Dependency-free JSON and SOAP fallback codecs, with optional Jackson JSON support.
-- Shared authentication, SSL, correlation metadata, timeouts, and retries.
-- Consistent `ClientTransportException`, `PayloadCodecException`, and
-  `MissingClientDependencyException` errors.
+It does not expose one mixed builder that contains unrelated HTTP, REST, SOAP, and socket fields.
+
+## Supported protocols
+
+| Builder | Runtime transport | Request and response |
+| --- | --- | --- |
+| `Requests.httpUrlConnection()` | JDK `HttpURLConnection` | `RestfulRequest<P, T>` -> `RestfulResponse<T>` |
+| `Requests.restClient()` | JDK `HttpClient` | `RestfulRequest<P, T>` -> `RestfulResponse<T>` |
+| `Requests.soapCxf()` | Apache CXF JAX-WS Dispatch | `SOAPRequest` -> `SOAPResponse<Element>` |
+| `Requests.socket()` | Caller-provided `SocketAdapter` | `SocketRequest<P, T>` -> `SocketResponse<T>` |
+
+All request builders require a positive connection timeout and read timeout. The default response limit is 10 MiB; override it with `maxResponseBytes(...)` when necessary.
 
 ## Installation
 
-The library coordinates are:
+UniClient requires Java 17.
 
-```xml
-<dependency>
-    <groupId>com.npat.uniclient</groupId>
-    <artifactId>uniclient</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
-</dependency>
+The default HTTP transports require only the library and the Jakarta REST API supplied by the application environment. Enable the `optional-adapters` Maven profile when building this project with Jackson JSON support and the CXF SOAP transport:
+
+```text
+mvn -Poptional-adapters test
 ```
 
-CXF and Jackson are optional. Add them explicitly only when those adapters are needed:
+A consuming application that selects SOAP must include CXF JAX-WS plus its HTTP transport and SAAJ implementation. A consuming application that sends DTOs or declares a DTO response type must provide a `JsonCodec`, normally `JacksonJsonCodec` backed by its own shared `ObjectMapper`.
 
-```xml
-<dependency>
-    <groupId>org.apache.cxf</groupId>
-    <artifactId>cxf-rt-frontend-jaxws</artifactId>
-    <version>4.2.2</version>
-</dependency>
-<dependency>
-    <groupId>com.fasterxml.jackson.core</groupId>
-    <artifactId>jackson-databind</artifactId>
-    <version>2.22.0</version>
-</dependency>
-```
+Optional dependencies are lazy: a missing dependency throws `MissingDependencyException` only when the corresponding protocol or JSON conversion is actually selected.
 
-For this checkout, `mvn test` verifies the dependency-free profile. Run
-`mvn -Poptional-adapters test` to compile and verify the optional CXF/Jackson paths.
+## Compose a client
 
-## Configuration
-
-`RequestSpec` is the immutable request value. The registry requires one factory for each
-`ServiceClient` value and applies the standard retry decorator when resolving a client:
+Register the adapters that your application supports. The caller controls this composition boundary.
 
 ```java
-DependencyAvailabilityPort availability = new ClasspathDependencyAvailability();
-AdapterRegistry registry = new AdapterRegistry(
-    availability,
-    StandardAdapterFactories.create());
-ClientFacade client = new ClientFacade(registry);
+import com.npat.uniclient.adapter.HttpUrlConnectionAdapter;
+import com.npat.uniclient.adapter.RestClientAdapter;
+import com.npat.uniclient.facade.AdapterRegistry;
+import com.npat.uniclient.facade.UniClient;
+
+import java.util.List;
+
+UniClient uniClient = new UniClient(new AdapterRegistry(List.of(
+    new HttpUrlConnectionAdapter(),
+    new RestClientAdapter())));
 ```
 
-`StandardAdapterFactories` includes CXF, so use it with the optional-adapters profile or with
-CXF explicitly available. A consumer that only needs JDK transports can register those two
-factories directly and provide a never-used placeholder for `APACHE_CXF`.
-
-## Usage Examples
-
-### 1. Standard REST JSON Request
-
-The built-in codec has no third-party runtime dependency. Transport adapters accept serialized
-`byte[]` or `String` bodies, so serialization is an explicit composition step:
+To use automatic JSON conversion, create one shared mapper and pass its codec to the facade:
 
 ```java
-public final class Order {
-    public String id;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.npat.uniclient.adapter.HttpUrlConnectionAdapter;
+import com.npat.uniclient.adapter.RestClientAdapter;
+import com.npat.uniclient.adapter.codec.JacksonJsonCodec;
+import com.npat.uniclient.facade.AdapterRegistry;
+import com.npat.uniclient.facade.UniClient;
 
-    public Order() {
-    }
+import java.util.List;
 
-    public Order(String id) {
-        this.id = id;
-    }
-}
+JacksonJsonCodec json = new JacksonJsonCodec(new ObjectMapper());
+UniClient uniClient = new UniClient(new AdapterRegistry(List.of(
+    new HttpUrlConnectionAdapter(),
+    new RestClientAdapter())), json);
+```
 
-PayloadCodecPort json = new BuiltinJsonCodec();
-byte[] body = json.serialize(new Order("A-17"));
-RequestSpec request = RequestSpec.builder()
-    .to("https://api.example.test/orders")
-    .httpMethod("POST")
+Add `new ApacheCxfSoapAdapter()` to that registry only in an application that includes CXF. Add one application-specific `SocketAdapter` to support its socket protocol.
+
+## HTTP and REST
+
+Use `httpUrlConnection()` when the JDK URL-connection transport is desired, and `restClient()` when the JDK `HttpClient` transport is desired. Both use explicit HTTP methods and permit repeated headers through the builder's `header(...)` method.
+
+```java
+import com.npat.uniclient.builder.Requests;
+import com.npat.uniclient.domain.HTTP_METHOD;
+import com.npat.uniclient.dto.RestfulRequest;
+import com.npat.uniclient.dto.RestfulResponse;
+
+import java.time.Duration;
+
+RestfulRequest<String, String> request = Requests.httpUrlConnection()
+    .body("{\"reference\":\"A-17\"}")
+    .endpoint("https://api.example.test/orders")
+    .method(HTTP_METHOD.POST)
     .header("Content-Type", "application/json")
-    .body(body)
+    .connTimeout(Duration.ofSeconds(2))
+    .readTimeout(Duration.ofSeconds(10))
     .build();
 
-ClientResponse response = client.execute(request, ServiceClient.REST_CLIENT);
+RestfulResponse<String> response = uniClient.send(request);
 ```
 
-### 2. SOAP Request with Envelope Construction
-
-Add CXF explicitly before selecting `APACHE_CXF`. The fallback SOAP codec creates a SOAP 1.1
-envelope from explicit operation metadata:
+Strings and `byte[]` payloads pass through unchanged. For another DTO type, UniClient encodes the request as JSON and defaults `Content-Type` to `application/json` unless the caller already provided it.
 
 ```java
-PayloadCodecPort soap = new SoapEnvelopeCodec(new SoapEnvelopeMetadata(
-    "urn:orders", "CreateOrder", "urn:orders:CreateOrder"));
-byte[] envelope = soap.serialize(new Order("A-17"));
-RequestSpec request = RequestSpec.builder()
-    .to("https://soap.example.test/orders")
-    .header("Content-Type", "text/xml; charset=utf-8")
-    .body(envelope)
+record CreateOrder(String reference) {}
+record OrderReply(String id) {}
+
+RestfulRequest<CreateOrder, OrderReply> request = Requests.restClient()
+    .body(new CreateOrder("A-17"))
+    .responseType(OrderReply.class)
+    .endpoint("https://api.example.test/orders")
+    .method(HTTP_METHOD.POST)
+    .connTimeout(Duration.ofSeconds(2))
+    .readTimeout(Duration.ofSeconds(10))
     .build();
 
-ClientResponse response = client.execute(request, ServiceClient.APACHE_CXF);
+RestfulResponse<OrderReply> response = uniClient.send(request);
+OrderReply reply = response.getResponseEntity();
 ```
 
-### 3. Lightweight HttpURLConnection with Custom SSL Context
+Without `responseType(...)`, a REST response remains available as `rawPayload`; callers can parse it themselves. `ResponseType<T>` is also available for parameterized response entities.
 
-A custom truststore can be selected per request:
+## SOAP with CXF
+
+`soapCxf()` accepts only a complete SOAP 1.1 or SOAP 1.2 `org.w3c.dom.Element` envelope containing a SOAP Body. UniClient does not build raw XML, create a SOAP operation, or convert a SOAP response to a DTO. The caller creates the envelope, including any SOAP headers and a body marshalled from its CXF-generated/JAXB request object; CXF sends that exact envelope at runtime in JAX-WS Dispatch message mode.
 
 ```java
-SslConfig ssl = SslConfig.custom(
-    null,
-    null,
-    "C:/certs/orders-truststore.p12",
-    "changeit");
-RequestSpec request = RequestSpec.builder()
-    .to("https://api.example.test/health")
-    .httpMethod("GET")
-    .ssl(ssl)
-    .body("")
+import com.npat.uniclient.adapter.ApacheCxfSoapAdapter;
+import com.npat.uniclient.builder.Requests;
+import com.npat.uniclient.dto.SOAPRequest;
+import com.npat.uniclient.dto.SOAPResponse;
+import com.npat.uniclient.facade.AdapterRegistry;
+import com.npat.uniclient.facade.UniClient;
+import org.w3c.dom.Element;
+
+import java.time.Duration;
+import java.util.List;
+
+// Construct a complete SOAP Envelope Element. The caller owns CXF-generated
+// request objects, JAXB marshalling, SOAP headers, and the SOAP Body.
+Element completeEnvelope = buildEnvelopeFromGeneratedCxfRequest();
+
+UniClient soapClient = new UniClient(new AdapterRegistry(List.of(
+    new ApacheCxfSoapAdapter())));
+
+SOAPRequest request = Requests.soapCxf()
+    .endpoint("https://soap.example.test/orders")
+    .body(completeEnvelope)
+    .soapAction("urn:orders:submit")
+    .connTimeout(Duration.ofSeconds(2))
+    .readTimeout(Duration.ofSeconds(15))
     .build();
 
-ClientResponse response = client.execute(request, ServiceClient.HTTPURLCONNECTION);
+SOAPResponse<Element> response = soapClient.send(request);
+Element receivedEnvelope = response.getResponseEntity();
 ```
 
-### 4. Custom API Metadata and Headers
+SOAP responses retain the received envelope element. SOAP faults return `success == false`, with `httpCode`, `faultString`, and `errorMessage` populated when CXF provides them. A missing CXF dependency throws `MissingDependencyException` when this request is sent; it does not affect HTTP-only or socket-only applications.
 
-Caller-provided correlation IDs are propagated; otherwise UniClient generates a UUID. Auth and
-custom headers are merged at the transport boundary:
+## Socket extension point
+
+UniClient intentionally has no built-in socket wire protocol. Supply one `SocketAdapter` that translates the neutral request fields - host, port, `SocketFormat`, payload, and timeouts - to the socket library used by your gateway.
 
 ```java
-RequestSpec request = RequestSpec.builder()
-    .to("https://api.example.test/orders")
-    .header("X-Tenant", "acme")
-    .header("X-Correlation-ID", "trace-123")
-    .auth(AuthConfig.bearer("token-value"))
-    .body("{}")
+import com.npat.uniclient.builder.Requests;
+import com.npat.uniclient.domain.SocketFormat;
+import com.npat.uniclient.dto.SocketRequest;
+import com.npat.uniclient.dto.SocketResponse;
+
+import java.time.Duration;
+
+SocketRequest<String, String> request = Requests.socket()
+    .body("ping")
+    .responseType(String.class)
+    .host("127.0.0.1")
+    .port(9000)
+    .format(SocketFormat.of("gateway-frame-v1"))
+    .connTimeout(Duration.ofSeconds(2))
+    .readTimeout(Duration.ofSeconds(10))
     .build();
 
-ClientResponse response = client.execute(request, ServiceClient.REST_CLIENT);
+SocketResponse<String> response = uniClient.send(request);
 ```
 
-For static service metadata, inject a configured `RequestHeaderAssembler` into a transport:
+## Responses and failures
 
-```java
-TransportPort transport = new RestClientAdapter(
-    null,
-    new RequestHeaderAssembler(new MetadataHeaderFactory("orders", "1.0")));
-ClientResponse response = new ClientFacade(engine -> transport)
-    .execute(request, ServiceClient.REST_CLIENT);
-```
+Every response extends `APIResponse<T>` and has these gateway-oriented fields:
 
-## Extensibility & Custom Clients
+- `success`
+- `httpCode`  -  `null` for socket responses
+- `rspCode` and `rspMessage`  -  values extracted from a response body when available
+- `errorMessage`  -  an upstream error message or API-level failure detail
+- `responseEntity`  -  the typed response payload, SOAP envelope, or socket payload
 
-Implement `TransportPort` and register its factory in `AdapterRegistry`. The registry remains
-the only engine-selection point:
+HTTP non-2xx responses and SOAP faults are returned as responses so a gateway can persist their details. Invalid request configuration, a missing selected optional dependency, and transport failures before a usable response exists throw typed unchecked exceptions:
 
-```java
-TransportPort custom = spec -> ClientResponse.builder()
-    .statusCode(200)
-    .body("custom response")
-    .build();
-
-EnumMap<ServiceClient, Supplier<TransportPort>> factories = new EnumMap<>(ServiceClient.class);
-for (ServiceClient engine : ServiceClient.values()) {
-    factories.put(engine, () -> custom);
-}
-AdapterRegistry registry = new AdapterRegistry(
-    new ClasspathDependencyAvailability(), factories);
-ClientResponse response = new ClientFacade(registry)
-    .execute(request, ServiceClient.REST_CLIENT);
-```
-
-## Error Handling
-
-Catch the exception that matches the failing boundary:
-
-- `ClientTransportException`: I/O, timeout, protocol, SSL, or connectivity failure.
-- `PayloadCodecException`: serialization, deserialization, malformed input, or unsupported type.
-- `MissingClientDependencyException`: an optional engine such as CXF was selected without its
-  explicit dependency.
-
-All three extend `UniClientException`. The original cause is retained when there is an
-underlying library or I/O failure.
+- `RequestValidationException`
+- `MissingDependencyException`
+- `TransportException`
 
 ## Verification
 
-The default build is dependency-free:
-
 ```text
-mvn clean test
+mvn test
+mvn -Poptional-adapters test
 ```
 
-The optional adapter build is explicit:
-
-```text
-mvn -Poptional-adapters clean test
-```
-
-Executable assertion suites are also available under `src/test/java`. The Plan 6 core suite
-uses hand-written fakes and performs no network, CXF, or Jackson work.
-
-## Known API Gaps
-
-The current redesign keeps serialization as a separate `PayloadCodecPort`; `ClientFacade` does
-not automatically select a codec from `ServiceClient`. Likewise, SOAP envelope construction is
-explicit through `SoapEnvelopeCodec` before transport execution. These are documented gaps from
-the earlier aspirational README wording and were not silently changed in the verification-only
-Plan 6.
+The executable examples in `src/test/java/com/npat/uniclient/FacadeUsageExamplesTest.java` demonstrate all four builders. The CXF executable adapter test additionally verifies SOAP 1.1, SOAP 1.2, SOAP Fault handling, status propagation, and the lazy missing-CXF guard.
