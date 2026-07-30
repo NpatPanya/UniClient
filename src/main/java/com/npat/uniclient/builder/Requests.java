@@ -5,15 +5,19 @@ public final class Requests {
     private Requests() {
     }
 
-    public static RestRequestBuilder rest() {
-        return new RestRequestBuilder();
+    public static HttpUrlConnectionRequestBuilder<Object, String> httpUrlConnection() {
+        return new HttpUrlConnectionRequestBuilder<>();
     }
 
-    public static SoapRequestBuilder soap() {
+    public static RestRequestBuilder<Object, String> restClient() {
+        return new RestRequestBuilder<>();
+    }
+
+    public static SoapRequestBuilder soapCxf() {
         return new SoapRequestBuilder();
     }
 
-    public static SocketRequestBuilder socket() {
-        return new SocketRequestBuilder();
+    public static SocketRequestBuilder<Object, byte[]> socket() {
+        return new SocketRequestBuilder<>();
     }
 }

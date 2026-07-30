@@ -15,7 +15,15 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+<dependencies>
+    <dependency>
+        <groupId>jakarta.ws.rs</groupId>
+        <artifactId>jakarta.ws.rs-api</artifactId>
+        <version>4.0.0</version>
+        <scope>provided</scope>
+    </dependency>
 
+</dependencies>
     <build>
         <plugins>
             <plugin>
@@ -26,6 +34,7 @@
                     <excludes>
                         <exclude>com/npat/uniclient/adapter/soap/**</exclude>
                         <exclude>com/npat/uniclient/adapter/codec/JacksonJsonCodec.java</exclude>
+                        <exclude>com/npat/uniclient/adapter/codec/JacksonCodecFactory.java</exclude>
                         <exclude>com/npat/uniclient/adapter/codec/PayloadCodecResolver.java</exclude>
                         <exclude>com/npat/uniclient/adapter/StandardAdapterFactories.java</exclude>
                     </excludes>
@@ -34,6 +43,7 @@
                         <testExclude>com/npat/uniclient/adapter/TransportAdaptersPlan3Test.java</testExclude>
                         <testExclude>com/npat/uniclient/codec/SerializationAdaptersPlan4Test.java</testExclude>
                         <testExclude>com/npat/uniclient/plan6/ReadmeExamplesPlan6Test.java</testExclude>
+                        <testExclude>com/npat/uniclient/adapter/codec/JacksonJsonCodecTest.java</testExclude>
                     </testExcludes>
                 </configuration>
             </plugin>
@@ -48,6 +58,18 @@
                     <groupId>org.apache.cxf</groupId>
                     <artifactId>cxf-rt-frontend-jaxws</artifactId>
                     <version>4.2.2</version>
+                    <optional>true</optional>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.cxf</groupId>
+                    <artifactId>cxf-rt-transports-http</artifactId>
+                    <version>4.2.2</version>
+                    <optional>true</optional>
+                </dependency>
+                <dependency>
+                    <groupId>com.sun.xml.messaging.saaj</groupId>
+                    <artifactId>saaj-impl</artifactId>
+                    <version>3.0.4</version>
                     <optional>true</optional>
                 </dependency>
                 <dependency>

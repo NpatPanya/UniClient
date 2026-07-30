@@ -1,6 +1,6 @@
 package com.npat.uniclient.dto;
 
-import com.bbl.gw.common.constant.GW_HTTP_HEADER;
+
 
 /**
  * GW Restful Header DTO according to AYGW specification.

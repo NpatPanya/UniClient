@@ -1,6 +1,7 @@
 package com.npat.uniclient.dto;
 
-import com.bbl.gw.common.exception.GWRejectException;
+
+import com.npat.uniclient.exception.GWRejectException;
 
 public class TransactionContext <Q, R> {
 //<ReqtRqt, ReqtRsp, PrvdRqt, PrvdRsp> {

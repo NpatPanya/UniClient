@@ -1,29 +1,23 @@
 package com.npat.uniclient.builder;
 
+import com.npat.uniclient.dto.base.BaseRequestConfig;
+import com.npat.uniclient.dto.componenet.AuthConfig;
+import com.npat.uniclient.exception.RequestValidationException;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
 
-import com.bbl.gw.common.dto.APIRequest;
-import com.bbl.gw.common.dto.componenet.AuthConfig;
-
+import java.net.URI;
 import java.time.Duration;
-import java.time.LocalDateTime;
 
-public abstract class BaseRequestBuilder<
-        T extends APIRequest<?>,
-        B extends BaseRequestBuilder<T, B>> {
+abstract class BaseRequestBuilder<B extends BaseRequestBuilder<B>> {
 
     protected AuthConfig auth;
     protected Duration connTimeout;
     protected Duration readTimeout;
-    protected LocalDateTime requestTime;
-    protected T payload;
+    protected long maxResponseBytes = BaseRequestConfig.DEFAULT_MAX_RESPONSE_BYTES;
 
     public B auth(AuthConfig auth) {
         this.auth = auth;
-        return self();
-    }
-
-    public B payload(T payload) {
-        this.payload = payload;
         return self();
     }
 
@@ -37,12 +31,68 @@ public abstract class BaseRequestBuilder<
         return self();
     }
 
-    public B requestTime(LocalDateTime requestTime) {
-        this.requestTime = requestTime;
+    public B maxResponseBytes(long maxResponseBytes) {
+        this.maxResponseBytes = maxResponseBytes;
         return self();
     }
 
     protected abstract B self();
 
-    public abstract T build();
+    protected final void validateTimeoutsAndResponseLimit() {
+        validatePositive(connTimeout, "connection timeout");
+        validatePositive(readTimeout, "read timeout");
+        if (maxResponseBytes <= 0) {
+            throw new RequestValidationException("max response bytes must be positive");
+        }
+    }
+
+    protected final void validateHttpEndpoint(String endpoint) {
+        if (endpoint == null || endpoint.isBlank()) {
+            throw new RequestValidationException("HTTP endpoint is required");
+        }
+        try {
+            URI uri = URI.create(endpoint);
+            if (!uri.isAbsolute() || uri.getHost() == null
+                    || !("http".equalsIgnoreCase(uri.getScheme()) || "https".equalsIgnoreCase(uri.getScheme()))) {
+                throw new RequestValidationException("HTTP endpoint must be an absolute http or https URI");
+            }
+        } catch (IllegalArgumentException exception) {
+            throw new RequestValidationException("HTTP endpoint must be an absolute http or https URI");
+        }
+    }
+
+    protected final void validateNoAuthorizationConflict(MultivaluedMap<String, String> headers) {
+        if (auth == null || auth.getType() == AuthConfig.AuthType.NONE) {
+            return;
+        }
+        for (String headerName : headers.keySet()) {
+            if ("Authorization".equalsIgnoreCase(headerName)) {
+                throw new RequestValidationException("structured authentication cannot be combined with an Authorization header");
+            }
+        }
+    }
+
+    protected final MultivaluedMap<String, String> copyHeadersWithJsonDefault(
+            MultivaluedMap<String, String> headers, Object body) {
+        MultivaluedMap<String, String> copied = new MultivaluedHashMap<>();
+        copied.putAll(headers);
+        if (requiresAutomaticJson(body) && !containsHeader(copied, "Content-Type")) {
+            copied.add("Content-Type", "application/json");
+        }
+        return copied;
+    }
+
+    protected final boolean containsHeader(MultivaluedMap<String, String> headers, String name) {
+        return headers.keySet().stream().anyMatch(existing -> name.equalsIgnoreCase(existing));
+    }
+
+    private boolean requiresAutomaticJson(Object body) {
+        return body != null && !(body instanceof String) && !(body instanceof byte[]);
+    }
+
+    private void validatePositive(Duration timeout, String label) {
+        if (timeout == null || timeout.isZero() || timeout.isNegative()) {
+            throw new RequestValidationException(label + " must be positive");
+        }
+    }
 }

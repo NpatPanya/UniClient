@@ -1,21 +1,28 @@
 package com.npat.uniclient.dto;
 
+import com.npat.uniclient.domain.ResponseType;
+
 /**
- * API Request DTO for capturing request data.
+ * Base request paired with its concrete protocol response type.
  *
- * @author 2521106332
- * @since 5 พ.ย. 2568
+ * @param <P> request payload type
+ * @param <R> paired response type
  */
-public abstract class APIRequest<T> {
+public abstract class APIRequest<P, R extends APIResponse<?>> {
 
-    private final T payload;
+    private final P payload;
+    private final ResponseType<?> responseType;
 
-    protected APIRequest(T payload) {
+    protected APIRequest(P payload, ResponseType<?> responseType) {
         this.payload = payload;
+        this.responseType = responseType;
     }
 
-    public T getPayload() {
+    public P getPayload() {
         return payload;
     }
 
+    public ResponseType<?> getResponseType() {
+        return responseType;
+    }
 }
