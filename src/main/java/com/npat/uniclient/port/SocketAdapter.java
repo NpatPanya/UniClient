@@ -5,7 +5,9 @@ import com.npat.uniclient.dto.APIResponse;
 import com.npat.uniclient.dto.SocketRequest;
 import com.npat.uniclient.dto.SocketResponse;
 
-/** Neutral extension point for one caller-supplied socket protocol adapter. */
+/**
+ * Neutral extension point for one caller-supplied socket protocol adapter.
+ */
 public interface SocketAdapter extends TransportAdapter {
 
     SocketResponse<?> send(SocketRequest<?, ?> request);

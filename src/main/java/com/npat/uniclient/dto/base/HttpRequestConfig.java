@@ -34,9 +34,23 @@ public class HttpRequestConfig extends BaseRequestConfig {
         this.transportKind = transportKind;
     }
 
-    public HTTP_METHOD getHttpMethod() { return httpMethod; }
-    public HeaderConfig getHeaderConfig() { return headerConfig; }
-    public SSLContext getSslContext() { return sslContext; }
-    public boolean isFollowRedirects() { return followRedirects; }
-    public HttpTransportKind getTransportKind() { return transportKind; }
+    public HTTP_METHOD getHttpMethod() {
+        return httpMethod;
+    }
+
+    public HeaderConfig getHeaderConfig() {
+        return headerConfig;
+    }
+
+    public SSLContext getSslContext() {
+        return sslContext;
+    }
+
+    public boolean isFollowRedirects() {
+        return followRedirects;
+    }
+
+    public HttpTransportKind getTransportKind() {
+        return transportKind;
+    }
 }

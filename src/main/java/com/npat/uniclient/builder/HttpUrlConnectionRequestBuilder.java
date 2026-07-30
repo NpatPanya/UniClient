@@ -40,18 +40,42 @@ public final class HttpUrlConnectionRequestBuilder<P, T>
         return (HttpUrlConnectionRequestBuilder<P, N>) this;
     }
 
-    public HttpUrlConnectionRequestBuilder<P, T> endpoint(String endpoint) { this.endpoint = endpoint; return this; }
-    public HttpUrlConnectionRequestBuilder<P, T> method(HTTP_METHOD method) { this.method = method; return this; }
-    public HttpUrlConnectionRequestBuilder<P, T> header(String name, String value) { headers.add(name, value); return this; }
-    public HttpUrlConnectionRequestBuilder<P, T> sslContext(SSLContext sslContext) { this.sslContext = sslContext; return this; }
-    public HttpUrlConnectionRequestBuilder<P, T> followRedirects(boolean followRedirects) { this.followRedirects = followRedirects; return this; }
+    public HttpUrlConnectionRequestBuilder<P, T> endpoint(String endpoint) {
+        this.endpoint = endpoint;
+        return this;
+    }
 
-    @Override protected HttpUrlConnectionRequestBuilder<P, T> self() { return this; }
+    public HttpUrlConnectionRequestBuilder<P, T> method(HTTP_METHOD method) {
+        this.method = method;
+        return this;
+    }
+
+    public HttpUrlConnectionRequestBuilder<P, T> header(String name, String value) {
+        headers.add(name, value);
+        return this;
+    }
+
+    public HttpUrlConnectionRequestBuilder<P, T> sslContext(SSLContext sslContext) {
+        this.sslContext = sslContext;
+        return this;
+    }
+
+    public HttpUrlConnectionRequestBuilder<P, T> followRedirects(boolean followRedirects) {
+        this.followRedirects = followRedirects;
+        return this;
+    }
+
+    @Override
+    protected HttpUrlConnectionRequestBuilder<P, T> self() {
+        return this;
+    }
 
     public RestfulRequest<P, T> build() {
         validateTimeoutsAndResponseLimit();
         validateHttpEndpoint(endpoint);
-        if (method == null) { throw new RequestValidationException("HTTP method is required"); }
+        if (method == null) {
+            throw new RequestValidationException("HTTP method is required");
+        }
         validateNoAuthorizationConflict(headers);
         return new RestfulRequest<>(body, new HttpRequestConfig(URLConfig.rest(endpoint), auth, connTimeout, readTimeout,
                 method, HeaderConfig.of(copyHeadersWithJsonDefault(headers, body)), sslContext, followRedirects, maxResponseBytes, HttpTransportKind.HTTP_URL_CONNECTION),

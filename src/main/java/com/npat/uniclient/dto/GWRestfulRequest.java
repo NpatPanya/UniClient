@@ -13,6 +13,11 @@ public class GWRestfulRequest<B> extends RestfulRequest<B, Object> {
         this.rqtHeaderEntity = rqtHeaderEntity;
     }
 
-    public GWRestfulHeader getRqtHeaderEntity() { return rqtHeaderEntity; }
-    public void setRqtHeaderEntity(GWRestfulHeader rqtHeaderEntity) { this.rqtHeaderEntity = rqtHeaderEntity; }
+    public GWRestfulHeader getRqtHeaderEntity() {
+        return rqtHeaderEntity;
+    }
+
+    public void setRqtHeaderEntity(GWRestfulHeader rqtHeaderEntity) {
+        this.rqtHeaderEntity = rqtHeaderEntity;
+    }
 }

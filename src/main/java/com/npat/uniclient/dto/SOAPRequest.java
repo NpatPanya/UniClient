@@ -14,6 +14,11 @@ public final class SOAPRequest extends APIRequest<Element, SOAPResponse<Element>
         this.soapAction = soapAction;
     }
 
-    public HttpRequestConfig getConfig() { return config; }
-    public String getSoapAction() { return soapAction; }
+    public HttpRequestConfig getConfig() {
+        return config;
+    }
+
+    public String getSoapAction() {
+        return soapAction;
+    }
 }

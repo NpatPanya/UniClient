@@ -28,7 +28,7 @@ public final class AuthConfig {
 
 
     public static AuthConfig bearer(String token) {
-        validateString(token,"token");
+        validateString(token, "token");
         return new AuthConfig(BEARER, token, null, null);
     }
 

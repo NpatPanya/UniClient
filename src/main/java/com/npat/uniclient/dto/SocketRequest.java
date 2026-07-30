@@ -15,6 +15,11 @@ public final class SocketRequest<P, T> extends APIRequest<P, SocketResponse<T>> 
         this.format = format;
     }
 
-    public BaseRequestConfig getConfig() { return config; }
-    public SocketFormat getFormat() { return format; }
+    public BaseRequestConfig getConfig() {
+        return config;
+    }
+
+    public SocketFormat getFormat() {
+        return format;
+    }
 }

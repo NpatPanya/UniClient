@@ -22,9 +22,17 @@ public final class HeaderConfig {
         return headers == null ? empty() : new HeaderConfig(headers);
     }
 
-    public String getFirst(String header) { return headers.getFirst(header); }
-    public List<String> get(String header) { return headers.get(header); }
-    public MultivaluedMap<String, String> all() { return new MultivaluedHashMap<>(headers); }
+    public String getFirst(String header) {
+        return headers.getFirst(header);
+    }
+
+    public List<String> get(String header) {
+        return headers.get(header);
+    }
+
+    public MultivaluedMap<String, String> all() {
+        return new MultivaluedHashMap<>(headers);
+    }
 
     @Override
     public boolean equals(Object object) {
@@ -32,5 +40,7 @@ public final class HeaderConfig {
     }
 
     @Override
-    public int hashCode() { return Objects.hashCode(headers); }
+    public int hashCode() {
+        return Objects.hashCode(headers);
+    }
 }

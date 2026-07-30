@@ -10,6 +10,7 @@ import com.npat.uniclient.exception.TransportException;
 import com.npat.uniclient.port.DependencyAvailability;
 import com.npat.uniclient.port.TransportAdapter;
 import org.w3c.dom.Element;
+
 import javax.xml.namespace.QName;
 import javax.xml.transform.dom.DOMSource;
 import java.lang.reflect.InvocationTargetException;
@@ -17,7 +18,9 @@ import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.Map;
 
-/** Optional CXF JAX-WS Dispatch transport for complete caller-supplied SOAP envelopes. */
+/**
+ * Optional CXF JAX-WS Dispatch transport for complete caller-supplied SOAP envelopes.
+ */
 public final class ApacheCxfSoapAdapter implements TransportAdapter {
     private static final String SOAP_11 = "http://schemas.xmlsoap.org/soap/envelope/";
     private static final QName SERVICE_NAME = new QName("urn:uniclient", "UniClientSoapService");

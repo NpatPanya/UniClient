@@ -25,13 +25,35 @@ public final class SoapRequestBuilder extends BaseRequestBuilder<SoapRequestBuil
     private SSLContext sslContext;
     private final MultivaluedMap<String, String> headers = new MultivaluedHashMap<>();
 
-    public SoapRequestBuilder endpoint(String endpoint) { this.endpoint = endpoint; return this; }
-    public SoapRequestBuilder body(Element envelope) { this.envelope = envelope; return this; }
-    public SoapRequestBuilder soapAction(String soapAction) { this.soapAction = soapAction; return this; }
-    public SoapRequestBuilder header(String name, String value) { headers.add(name, value); return this; }
-    public SoapRequestBuilder sslContext(SSLContext sslContext) { this.sslContext = sslContext; return this; }
+    public SoapRequestBuilder endpoint(String endpoint) {
+        this.endpoint = endpoint;
+        return this;
+    }
 
-    @Override protected SoapRequestBuilder self() { return this; }
+    public SoapRequestBuilder body(Element envelope) {
+        this.envelope = envelope;
+        return this;
+    }
+
+    public SoapRequestBuilder soapAction(String soapAction) {
+        this.soapAction = soapAction;
+        return this;
+    }
+
+    public SoapRequestBuilder header(String name, String value) {
+        headers.add(name, value);
+        return this;
+    }
+
+    public SoapRequestBuilder sslContext(SSLContext sslContext) {
+        this.sslContext = sslContext;
+        return this;
+    }
+
+    @Override
+    protected SoapRequestBuilder self() {
+        return this;
+    }
 
     public SOAPRequest build() {
         validateTimeoutsAndResponseLimit();

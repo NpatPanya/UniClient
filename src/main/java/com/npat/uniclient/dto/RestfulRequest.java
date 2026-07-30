@@ -18,7 +18,15 @@ public class RestfulRequest<P, T> extends APIRequest<P, RestfulResponse<T>> {
         this.queryParams = queryParams;
     }
 
-    public HttpRequestConfig getConfig() { return config; }
-    public MultivaluedMap<String, String> getPathParams() { return pathParams; }
-    public MultivaluedMap<String, String> getQueryParams() { return queryParams; }
+    public HttpRequestConfig getConfig() {
+        return config;
+    }
+
+    public MultivaluedMap<String, String> getPathParams() {
+        return pathParams;
+    }
+
+    public MultivaluedMap<String, String> getQueryParams() {
+        return queryParams;
+    }
 }

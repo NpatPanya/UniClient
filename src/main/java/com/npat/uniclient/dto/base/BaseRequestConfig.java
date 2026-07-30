@@ -31,10 +31,27 @@ public class BaseRequestConfig {
         this.requestTime = LocalDateTime.now();
     }
 
-    public URLConfig getUrlConfig() { return urlConfig; }
-    public AuthConfig getAuthentication() { return authentication; }
-    public Duration getConnTimeout() { return connTimeout; }
-    public Duration getReadTimeout() { return readTimeout; }
-    public long getMaxResponseBytes() { return maxResponseBytes; }
-    public LocalDateTime getRequestTime() { return requestTime; }
+    public URLConfig getUrlConfig() {
+        return urlConfig;
+    }
+
+    public AuthConfig getAuthentication() {
+        return authentication;
+    }
+
+    public Duration getConnTimeout() {
+        return connTimeout;
+    }
+
+    public Duration getReadTimeout() {
+        return readTimeout;
+    }
+
+    public long getMaxResponseBytes() {
+        return maxResponseBytes;
+    }
+
+    public LocalDateTime getRequestTime() {
+        return requestTime;
+    }
 }
