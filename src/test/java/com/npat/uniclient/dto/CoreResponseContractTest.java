@@ -1,7 +1,5 @@
 package com.npat.uniclient.dto;
 
-import java.lang.reflect.Method;
-
 /**
  * Executable contract assertions for the framework-free response core.
  */

@@ -9,7 +9,9 @@ import com.npat.uniclient.port.TransportAdapter;
 
 import java.util.List;
 
-/** Executable contracts for typed facade dispatch. */
+/**
+ * Executable contracts for typed facade dispatch.
+ */
 public final class UniClientDispatchTest {
 
     private UniClientDispatchTest() {
@@ -44,12 +46,21 @@ public final class UniClientDispatchTest {
     private static void passesConfiguredJsonCodecOnlyToTheSelectedAdapter() {
         CountingAdapter adapter = new CountingAdapter(DependencyAvailability.available());
         com.npat.uniclient.port.JsonCodec codec = new com.npat.uniclient.port.JsonCodec() {
-            public byte[] encode(Object value) { return new byte[0]; }
-            public <T> T decode(String payload, com.npat.uniclient.domain.ResponseType<T> type) { return null; }
-            public <T> RestfulResponse<T> decodeResponseEnvelope(String payload, com.npat.uniclient.domain.ResponseType<T> type) { return new RestfulResponse<>(); }
+            public byte[] encode(Object value) {
+                return new byte[0];
+            }
+
+            public <T> T decode(String payload, com.npat.uniclient.domain.ResponseType<T> type) {
+                return null;
+            }
+
+            public <T> RestfulResponse<T> decodeResponseEnvelope(String payload, com.npat.uniclient.domain.ResponseType<T> type) {
+                return new RestfulResponse<>();
+            }
         };
         new UniClient(new AdapterRegistry(List.of(adapter)), codec).send(new TestRequest("request-body"));
-        if (adapter.receivedCodec != codec) throw new AssertionError("facade must pass its configured codec to the selected adapter");
+        if (adapter.receivedCodec != codec)
+            throw new AssertionError("facade must pass its configured codec to the selected adapter");
     }
 
     private static final class TestRequest extends APIRequest<String, RestfulResponse<String>> {

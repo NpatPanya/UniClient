@@ -11,9 +11,12 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
-/** Executable integration contracts for the JDK HTTP transport adapters. */
+/**
+ * Executable integration contracts for the JDK HTTP transport adapters.
+ */
 public final class JdkHttpAdaptersTest {
-    private JdkHttpAdaptersTest() { }
+    private JdkHttpAdaptersTest() {
+    }
 
     public static void main(String[] args) throws Exception {
         HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
@@ -27,7 +30,11 @@ public final class JdkHttpAdaptersTest {
             exchange.getResponseBody().write(body);
             exchange.close();
         });
-        server.createContext("/redirect", exchange -> { exchange.getResponseHeaders().add("Location", "/echo"); exchange.sendResponseHeaders(302, -1); exchange.close(); });
+        server.createContext("/redirect", exchange -> {
+            exchange.getResponseHeaders().add("Location", "/echo");
+            exchange.sendResponseHeaders(302, -1);
+            exchange.close();
+        });
         server.createContext("/not-found", exchange -> {
             byte[] body = "missing".getBytes(StandardCharsets.UTF_8);
             exchange.sendResponseHeaders(404, body.length);
@@ -88,11 +95,22 @@ public final class JdkHttpAdaptersTest {
     }
 
     private static void assertThrows(Class<? extends Throwable> expected, ThrowingRunnable action, String label) {
-        try { action.run(); } catch (Throwable throwable) { if (expected.isInstance(throwable)) return; throw new AssertionError(label, throwable); }
+        try {
+            action.run();
+        } catch (Throwable throwable) {
+            if (expected.isInstance(throwable)) return;
+            throw new AssertionError(label, throwable);
+        }
         throw new AssertionError(label + " did not throw");
     }
+
     private static void assertEquals(Object expected, Object actual, String label) {
-        if (expected == null ? actual != null : !expected.equals(actual)) throw new AssertionError(label + "; expected=" + expected + ", actual=" + actual);
+        if (expected == null ? actual != null : !expected.equals(actual))
+            throw new AssertionError(label + "; expected=" + expected + ", actual=" + actual);
     }
-    @FunctionalInterface private interface ThrowingRunnable { void run() throws Exception; }
+
+    @FunctionalInterface
+    private interface ThrowingRunnable {
+        void run() throws Exception;
+    }
 }
